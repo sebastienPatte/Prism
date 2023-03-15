@@ -1,0 +1,48 @@
+mdp
+
+module Utilisateur
+	bma : bool init false;
+	bcafe : bool init false;
+	ajoutEau : bool init false;
+	prendreCafe : bool init false;
+
+  [Bma] true -> (bma'=true) & (bcafe'=false);
+  [Bcafe] true -> (bcafe'=true) & (bma'=false);
+  [AjoutEau] true -> (ajoutEau'=true);
+  [PrendreCafe] true -> (prendreCafe'=true);
+endmodule
+
+module Eau
+	niveau : [0..20] init 0;
+	eauChaude : bool init false;
+	Vchauf: bool init false;
+	Vvide : bool init true;
+  [AjoutEau] (niveau<20) -> (niveau'=20) & (Vvide'=false) & (Vchauf'=true);
+ 
+  [Bma] (mode=0) -> (Vchauf'=true) & (Vvide'=(niveau=0));
+  [Bma] (mode>0)  -> (Vchauf'=false) & (Vvide'=false);
+ 
+  [EauOk] (Vchauf) & (mode>0) -> (Vchauf'=false) & (eauChaude'=true);
+  [BCafe] (niveau>0) -> (niveau'=niveau-1) & (Vvide'=(niveau=1));
+  
+endmodule
+
+module Controlleur
+	mode : [0..3] init 0; //arret, attente, pret, distrib
+	Vpret : bool init false;
+  
+  [Bma] (mode=0) -> (mode'=1);
+  [EauOk] (mode=1) -> (mode'=2) & (Vpret'=true);
+
+  [Bcafe] (mode=2) & (niveau>1) -> (mode'=3) & (Vpret'=false); 
+  [Bcafe] (mode=2) & (niveau=1) -> (mode'=1) & (Vpret'=false);
+  [Bcafe] (mode=3) & (niveau>1) -> true;
+  [Bcafe] (mode=3) & (niveau=1) -> (mode'=1) & (Vpret'=false);
+  [Bma] (mode>0) -> (mode'=0);
+endmodule
+
+
+label "arret" = (mode=0);
+label "attente" = (mode=1);
+label "pret" = (mode=2);
+label "distrib" = (mode=3);
