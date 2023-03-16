@@ -1,0 +1,48 @@
+A [ (G ("Pon"|"Poff"))&(G ((!"Pon")|(!"Poff"))) ]
+
+A [ G ("Von"<=>"Pon") ]
+
+A [ G ((X "Bonoff")=>(("Pon"&(X "Poff"))|("Poff"&(X "Pon")))) ]
+
+A [ G (((X ("Pon"&"Bonoff"))=>("Poff"))&((X ("Poff"&"Bonoff"))=>("Pon"))) ]
+
+A [ G (((X "Bonoff")&"Pon")=>(X "Poff")) ]
+
+// Q3
+A [ "Pon"=>(("attente"&!"marche"&!"fin")|(!"attente"&"marche"&!"fin")|(!"attente"&!"marche"&"fin")) ]
+
+// Q4 : erreur car faux si OFF
+A [ G (("Bsr"&(X ("Bsr"&(X "Bsr"))))=>(X (X "attente"))) ]
+
+A [ G (("Pon"&"Bsr"&(X ("Bsr"&(X ("Bsr")))))=>(X (X "attente"))) ]
+
+// OK: Q4 corrigee 
+A [ G ((!"Bsr"&"Pon"&(X ("Bsr"&(X ("Bsr"&(X ("Bsr")))))))=>(X (X (X "attente")))) ]
+
+// Q4 corrigee 
+// Mais on oublie que la machine doit etre ON (sinon on peut appuyer autant qu'on veut !)
+A [ G ((!"Bsr"&(X ("Bsr"&(X ("Bsr"&(X ("Bsr")))))))=>(X (X (X "attente")))) ]
+
+// Q7 mais erronee car ne tient pas compte des evenements externes (comme les boutons)
+A [ G ("fin"=>(G (("Vrincage"&"Vlavage"&"Vsechage"&(X (!"Vrincage"&!"Vlavage"&!"Vsechage")))|(!"Vrincage"&!"Vlavage"&!"Vsechage"&(X ("Vrincage"&"Vlavage"&"Vsechage")))))) ]
+
+// Q9
+A [ G (("attente"&(X "marche")&"Pintensif"&((G "Pbt")|(G (!"Pbt"))))=>(X ("Vrincage"&("Vrincage" U ("Vlavage"&("Vlavage" U "Vsechage")))))) ]
+
+// Q7 - a
+A [ G ("fin"=>(G ((!"fin") | ("Vrincage"&"Vlavage"&"Vsechage")|(!"Vrincage"&!"Vlavage"&!"Vsechage"))))]
+
+// Q7 - b (complete Q7-a)
+A [ G (("fin"&((G "Pbt")|(G (!"Pbt"))))=>((G (F ("Vrincage"&"Vlavage"&"Vsechage")))&(G (F (!"Vrincage"&!"Vlavage"&!"Vsechage"))))) ]
+
+// Q7 - a
+A [ G ("fin"=>( ( ( ("Vrincage" & "Vlavage" & "Vsechage")  | (!"Vrincage" & !"Vlavage" & !"Vsechage" ) )  U ("Pinit") ) | (G (("Vrincage"&"Vlavage"&"Vsechage")|(!"Vrincage"&!"Vlavage"&!"Vsechage")))))]
+
+A [ G ("fin" <=> "fin2")]
+
+// Q7 - a
+A [ G ((!"fin") | ("Vrincage"&"Vlavage"&"Vsechage")|(!"Vrincage"&!"Vlavage"&!"Vsechage"))]
+
+// on verifie que le modele autorise d'appuyer sur tout bouton a tout moment
+A [ G ( (E [X "Bsr"]) | (E [X "Bonoff"]) )]
+

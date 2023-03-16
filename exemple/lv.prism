@@ -1,0 +1,70 @@
+
+
+mdp  
+
+module Utilisateur
+	prog : [0..1] init 0; // 0 : eco 1: intensif
+	bouton : bool init false; // passe de F a V ou de V a F quand une action externe a lieu
+  [BOnOff] true -> (bouton'=!bouton); 
+  [Bsr] true -> (bouton'=!bouton); 
+  [eco] true -> (prog'=0) & (bouton'=!bouton); 
+  [intensif] true -> (prog'=1) & (bouton'=!bouton);
+endmodule
+  
+module Controleur
+       qm : [0..3] init 0;  // 0:off 1:attente 2:marche 3: fin
+       ql : [0..4] init 0;  // 0:pret, 1: rincage, 2:lavage, 3:sechage, 4:fin
+       cpteurbsr : [0..2] init 0; // compte le nb de pressions successives sur Bsr
+       bonoff : bool init false;
+       bsr : bool init false;
+       von : bool init false;
+       vrincage : bool init false; 
+       vlavage : bool init false; 
+       vsechage : bool init false; 
+       [BOnOff] (qm=0) -> (qm'=1) & (von'=true) & (vrincage'=false) & (vlavage'=false) & (vsechage'=false) & (cpteurbsr'=0) & (bonoff'=true) & (bsr'=false); 
+       [BOnOff] (qm>0) -> (qm'=0) & (ql'=0) & (von'=false) & (vrincage'=false) & (vlavage'=false) & (vsechage'=false) & (cpteurbsr'=0) & (bonoff'=true) & (bsr'=false); 
+       [Bsr] (qm=0) -> (qm'=0) & (bsr'=true) & (bonoff'=false) ;
+       [Bsr] (qm>0) & (cpteurbsr=2) -> (qm'=1) & (ql'=0) & (cpteurbsr'=0) & (bsr'=true)& (bonoff'=false);
+       [Bsr] (qm=1) & (cpteurbsr=0) -> (qm'=2) & (cpteurbsr'=1) & (bsr'=true)& (bonoff'=false); 
+       [Bsr] (qm>0) & (cpteurbsr=1) -> (cpteurbsr'=2) & (bsr'=true) & (bonoff'=false); 
+       [Bsr] (qm=2) & (cpteurbsr=0) -> (cpteurbsr'=1) & (bonoff'=false) & (bsr'=true); 
+       [Bsr] (qm=3) & (cpteurbsr=0) -> (cpteurbsr'=1) & (bonoff'=false) & (bsr'=true);
+       [eco] (true) -> (cpteurbsr'=0) & (bsr'=false) & (bonoff'=false);
+       [intensif] (true) -> (cpteurbsr'=0) & (bsr'=false) & (bonoff'=false);
+       [i] (ql=0) & (qm=2) & (prog=0)-> (ql'=2) & (vlavage'=true) & (bonoff'=false) & (bsr'=false) & (cpteurbsr'=0); // debut eco 
+       [i] (ql=0) & (qm=2) & (prog=1)-> (ql'=1) & (vrincage'=true) & (bonoff'=false) & (bsr'=false) & (cpteurbsr'=0); // debut intensif
+       [i] (ql=1) & (qm=2) -> (ql'=2) & (vrincage'=false) & (vlavage'=true) & (bonoff'=false) & (bsr'=false) & (cpteurbsr'=0); 
+       [i] (ql=2) & (qm=2)-> (ql'=3) & (vsechage'=true) & (vlavage'=false) & (bonoff'=false) & (bsr'=false) & (cpteurbsr'=0); 
+       [i] (ql=3) & (qm=2)-> (ql'=4) & (qm'=3)  & (vrincage'=true) & (vlavage'=true) & (vsechage'=true) & (bonoff'=false) & (bsr'=false) & (cpteurbsr'=0); 
+       [i] (ql=4)   -> (vrincage'=!vrincage) & (vlavage'=!vlavage) & (vsechage'=!vsechage) & (bonoff'=false) & (bsr'=false) & (cpteurbsr'=0);
+endmodule
+
+module Lavage
+
+
+endmodule
+
+       
+label "attente" = (qm=1); 
+label "marche" = (qm=2); 
+label "fin" = (qm=3); 
+label "fin2" = (ql=4); 
+label "Bonoff" = (bonoff=true);
+label "Bsr" = (bsr=true);
+label "Von" = (von=true);
+label "Vrincage" = (vrincage=true);
+label "Vlavage" = (vlavage=true);
+label "Vsechage" = (vsechage=true);
+label "Peco" = (prog=0);
+label "Pintensif" = (prog=1);
+label "Poff" = (qm=0);
+label "Pon" = (qm > 0);
+label "dBsr" = (cpteurbsr=2);
+label "Pbt" = (bouton=true);
+label "Pinit" = (qm=0) & (ql=0);
+
+
+
+
+
+
