@@ -17,7 +17,7 @@ module Controlleur
 	bthe : bool init false;
 
 	mode : [1..4] init 1; //dispo, choix, prepa, fin
-	vpret : bool init false;
+	vpret : bool init true;
 	vprepa : bool init false;
 	vfini : bool init false;
 
@@ -31,16 +31,17 @@ module Controlleur
   [Bsucre] (mode=2) & (piece=true) & (sucre=2) -> (mode'=2) & (sucre'=0);	//retour au sans sucre
   [Bann] (mode=2) & (piece=true) -> (piece'=false) & (mode'=2); //rend piece
   [] (mode=2) & (piece=false) -> (mode'=1); //retour etat initial quand il n'y a plus de piece
-  [Bcafe] (mode=2) & (piece=true) -> (mode'=3) & (bcafe'=true) & (piece'=false);
-  [Bthe] (mode=2) & (piece=true) -> (mode'=3) & (bthe'=true) & (piece'=false);
+  
+  [Bcafe] (mode=2) & (piece=true) -> (mode'=3) & (bcafe'=true) & (piece'=false) & (vpret'=false) & (vprepa'=true);
+  [Bthe] (mode=2) & (piece=true) -> (mode'=3) & (bthe'=true) & (piece'=false) & (vpret'=false) & (vprepa'=true);
 
-  [] (mode=3) & (bcafe=true) -> (mode'=4) & (bcafe'=false) & (pcafe'=true);
-  [] (mode=3) & (bthe=true) -> (mode'=4) & (bthe'=false) & (pthe'=true);
+  [] (mode=3) & (bcafe=true) -> (mode'=4) & (bcafe'=false) & (pcafe'=true) & (vprepa'=false) & (vfini'=true);
+  [] (mode=3) & (bthe=true) -> (mode'=4) & (bthe'=false) & (pthe'=true) & (vprepa'=false) & (vfini'=true);
 
-  [PrendGobelet] (mode=4) & (gout=false) & (pcafe=true) -> (gout'=true) & (pcafe'=false) ;
-  [PrendGobelet] (mode=4) & (gout=false) & (pthe=true) -> (gout'=true) & (pthe'=false) ;
+  [PrendGobelet] (mode=4) & (gout=false) & (pcafe=true) -> (gout'=true) & (pcafe'=false);
+  [PrendGobelet] (mode=4) & (gout=false) & (pthe=true) -> (gout'=true) & (pthe'=false);
 
-  [] (mode=4) & (gout=true) -> (mode'=1) & (gout'=false);
+  [] (mode=4) & (gout=true) -> (mode'=1) & (gout'=false) & (vfini'=false) & (vpret'=true);
 
 endmodule
 
