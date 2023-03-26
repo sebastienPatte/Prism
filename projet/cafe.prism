@@ -2,19 +2,25 @@ mdp
 
 module Utilisateur
 	bouton : bool init false; // passe de F a V ou de V a F quand une action externe a lieu
-  [Bcafe] true -> (bouton'=!bouton);
-  [Bthe] true -> (bouton'=!bouton);
-  [Bann] true -> (bouton'=!bouton);
-  [AjoutPiece] true -> (bouton'=!bouton);
-  [PrendGobelet] true -> (bouton'=!bouton);
-  [Bsucre] true -> (bouton'=!bouton); 
+	bsucre : bool init false;
+	sucre : [0..2] init 0; //non sucré, sucré, très sucré
+  [Bcafe] (bsucre=false) -> (bouton'=!bouton);
+  [Bthe] (bsucre=false) -> (bouton'=!bouton);
+  [Bann] (bsucre=false) -> (bouton'=!bouton);
+  [AjoutPiece] (bsucre=false) -> (bouton'=!bouton);
+  [PrendGobelet] (bsucre=false) -> (bouton'=!bouton);
+  [Bsucre] (bsucre=false) -> (bsucre'=true); 
+  [] (bsucre=true) & (sucre<2) -> (bsucre'=false) & (sucre'=sucre+1); //augmente sucre
+  [] (bsucre=true) & (sucre=2) -> (bsucre'=false) & (sucre'=0); //augmente sucre
 endmodule
 
 module Controlleur
-	piece : bool init false;
-	sucre : [0..2] init 0; //non sucré, sucré, très sucré
+	p50 : bool init false;
+	r50 : bool init false;
+
 	bcafe : bool init false;
 	bthe : bool init false;
+	bann : bool init false;
 
 	mode : [1..4] init 1; //dispo, choix, prepa, fin
 	vpret : bool init true;
@@ -25,23 +31,24 @@ module Controlleur
 	pthe : bool init false;
 	gout : bool init false;
 
-  [AjoutPiece] (mode=1) & (piece=false) -> (piece'=true) & (mode'=2);
+  [AjoutPiece] (mode=1) & (p50=false) & (r50=false) -> (p50'=true);
+  [i] (mode=1) & (p50=true) -> (p50'=false) & (mode'=2);
+  [i] (mode=1) & (r50=true) -> (r50'=false);
 
-  [Bsucre] (mode=2) & (piece=true) & (sucre<2) -> (mode'=2) & (sucre'=sucre+1); //augmente sucre
-  [Bsucre] (mode=2) & (piece=true) & (sucre=2) -> (mode'=2) & (sucre'=0);	//retour au sans sucre
-  [Bann] (mode=2) & (piece=true) -> (piece'=false) & (mode'=2); //rend piece
-  [] (mode=2) & (piece=false) -> (mode'=1); //retour etat initial quand il n'y a plus de piece
+  [Bsucre] (mode=2) & (bann=false) -> (mode'=2);
+
+  [Bann] (mode=2) & (bann=false) -> (mode'=2) & (bann'=true); //rend piece
+  [i] (mode=2) & (bann=true) -> (mode'=1) & (r50'=true) & (bann'=false) ; //retour etat initial quand il n'y a plus de piece
   
-  [Bcafe] (mode=2) & (piece=true) -> (mode'=3) & (bcafe'=true) & (piece'=false) & (vpret'=false) & (vprepa'=true);
-  [Bthe] (mode=2) & (piece=true) -> (mode'=3) & (bthe'=true) & (piece'=false) & (vpret'=false) & (vprepa'=true);
+  [Bcafe] (mode=2) & (bann=false) -> (mode'=3) & (bcafe'=true) & (vpret'=false) & (vprepa'=true);
+  [Bthe] (mode=2) & (bann=false) -> (mode'=3) & (bthe'=true) & (vpret'=false) & (vprepa'=true);
 
-  [] (mode=3) & (bcafe=true) -> (mode'=4) & (bcafe'=false) & (pcafe'=true) & (vprepa'=false) & (vfini'=true);
-  [] (mode=3) & (bthe=true) -> (mode'=4) & (bthe'=false) & (pthe'=true) & (vprepa'=false) & (vfini'=true);
-
+  [i] (mode=3) & (bcafe=true) -> (mode'=4) & (bcafe'=false) & (pcafe'=true) & (vprepa'=false) & (vfini'=true);
+  [i] (mode=3) & (bthe=true) -> (mode'=4) & (bthe'=false) & (pthe'=true) & (vprepa'=false) & (vfini'=true);
   [PrendGobelet] (mode=4) & (gout=false) & (pcafe=true) -> (gout'=true) & (pcafe'=false);
   [PrendGobelet] (mode=4) & (gout=false) & (pthe=true) -> (gout'=true) & (pthe'=false);
 
-  [] (mode=4) & (gout=true) -> (mode'=1) & (gout'=false) & (vfini'=false) & (vpret'=true);
+  [i] (mode=4) & (gout=true) -> (mode'=1) & (gout'=false) & (vfini'=false) & (vpret'=true);
 
 endmodule
 
@@ -53,8 +60,8 @@ label "Vpret"  = (vpret=true);
 label "Vprepa" = (vprepa=true);
 label "Vfini"  = (vfini=true);
 
-label "P50" = (piece=true);
-label "R50" = (mode=2) & (piece=false);
+label "P50" = (p50=true);
+label "R50" = (r50=true);
 
 label "Psucre" = (sucre=1);
 label "Ptres_sucre" = (sucre=2);
@@ -62,3 +69,6 @@ label "Ptres_sucre" = (sucre=2);
 label "Gout" = (gout= true);
 label "Pcafe" = (pcafe= true);
 label "Pthe" = (pthe= true);
+
+label "Bsucre" = (bsucre=true);
+label "Bann" = (bann=true);
