@@ -143,5 +143,28 @@ De plus, depuis l'état où $\texttt{B}_\texttt{ann}$ est vraie, une action inte
 \clearpage
 
 \section{Spécification}
-
+Nous allons reprendre quelques propriétés où une petite explication est nécessaire.
+\begin{enumerate}
+    \item Ici la seul difficulté et d'exprimer un "xor" pour chaque cas d'où la présence de mutiple négation.
+\begin{verbatim}
+Prop: A [ G (("Mdispo"&!("Mfin")&!("Mprepa")&!("Mchoix")) ....]
+\end{verbatim}
+    \item Dans le fichier \texttt{.props}, cette proporiété est séparée en 3. 
+        Rien de spécial à préciser. 
+    \item Pour indiquer le fait que le changement d'état arrivera un temps plus tard en utilisant l'implication et l'opérateur next.
+\begin{verbatim}
+Prop :A [ G ("Mdispo"&"P50" $\longrightarrow$ (X ("Mchoix"))) ].
+\end{verbatim}
+    \item Rien de particulier. Le "mais si" est traité comme une disjonction donc on obtient deux sous propriétés.
+    \item RAS.
+    \item Dans la première propriété, il est précisé que l'évenement arriverra "éventuellement". Ce qui nous indique qu'il faut utiliser l'opérateur F.
+\begin{verbatim}
+Exemple prop 1: A [ G ("Mdispo"&(X (!"Mdispo"))=>(X(F"Mchoix"))) ].
+\end{verbatim}
+    Dans les 3 autres, c'est directement à l'état d'après donc on utilise un next uniquement.
+    \item Le défi est de traduire "infiniment souvent". Ce que l'on traduit par "toujours un jours" soit "G F". 
+    \item Dans le fichier \texttt{.props}, cette proporiété est séparée en 3. 
+    Rien de spécial à préciser. 
+    \item En appuyant sur le bouton café on aura un jour un café. Donc utilise l'opérateur F encore. 
+\end{enumerate}
 \end{document}
