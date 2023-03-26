@@ -1,0 +1,147 @@
+\documentclass{article}
+
+\author{Sebastien Patte \\ Naïm Moussaoui-Remil}
+% \usepackage[margin=60pt]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usetikzlibrary{petri,positioning}
+
+\title{Méthodes formelles - Vérification probabiliste}
+
+\newcommand{\sv}{\;\vert\;}
+\newcommand{\wrt}{with respect to\xspace}
+\newcommand{\eva}{Eva\xspace}
+\renewcommand{\wp}{WP\xspace}
+\newcommand{\eacsl}{E-ACSL\xspace}
+
+
+\begin{document}
+
+%\selectlanguage{french}
+\maketitle
+%\nocite{*}
+
+
+	
+\section{Modélisation}
+
+Le modèle est composé de 2 modules : Utilisateur et Contrôleur. 
+L'utilisateur peut faire les actions \texttt{ajoutPièce}, \texttt{prendGobelet},
+\texttt{B}$_\texttt{ann}$, \texttt{B}$_\texttt{café}$, \texttt{B}$_\texttt{thé}$ et \texttt{B}$_\texttt{sucre}$, mais uniquement quand ces actions actions sont simultanément possibles dans le modèle du Contrôleur.
+
+\subsection{Utilisateur}
+
+Dans le modèle de l'utilisateur, on s'occupe pricipalement de la gestion du niveau de sucre avec le bouton \texttt{B}$_\texttt{sucre}$, les autres actions étant gérées dans le module Contrôleur. 
+
+Les actions \texttt{ajoutPièce}, \texttt{prendGobelet},
+\texttt{B}$_\texttt{ann}$, \texttt{B}$_\texttt{café}$, \texttt{B}$_\texttt{thé}$ bouclent sur l'état initial. 
+Mais l'action \texttt{B}$_\texttt{sucre}$ fait passer le système dans un état où la proposition \texttt{B}$_\texttt{sucre}$ est vraie, et depuis lequel on peut seulement revenir à l'état initial par une des 2 actions internes en fonction du niveau de sucre actuel.
+
+Le niveau de sucre : 0 (pas sucré), 1 (sucré), et 2 (très sucré), est incréménté si le niveau actuel est $<2$, et est réinitialisé à $0$ si il était à $2$. 
+
+\usetikzlibrary {automata,positioning}
+\begin{figure}[h]
+	\centering
+\begin{tikzpicture}[node distance=4cm,auto]
+  \node[state]  (q)   {\empty};
+  \node[state]  (q1) [right = of q]  {Bsucre};
+
+  \path[->, every loop/.style={in=115,out=145}] (q) edge [loop] node {Bcafé} (); 
+  \path[->] (q) edge [loop above] node        {Bthé} ();
+  \path[->, every loop/.style={in=210,out=245}] (q) edge [loop] node[left] {prendGobelet} ();
+  \path[->] (q)  edge node[below]  {Bsucre} (q1);
+  \path[->] (q1) edge[bend left]  node[below] {sucre$<$2 ? sucre+=1} (q);
+  \path[->] (q1) edge[bend right] node[above] {sucre=2 ? sucre=0} (q);
+  \path[->] (q)  edge[loop below] node[below left]  {ajoutPièce} ();
+  \path[->] (q)  edge[loop left]  node        {Bann} ();
+\end{tikzpicture}
+%\caption{FD Typestate} \label{fig:M1}
+\end{figure}
+
+
+
+
+
+\subsection{Contrôleur}
+
+La machine a café peut être dans 4 modes différents : $\texttt{M}_\texttt{dispo}$ $\texttt{M}_\texttt{choix}$, $\texttt{M}_\texttt{prépa}$ et $\texttt{M}_\texttt{fin}$, représentés respectivement par les couleurs \textcolor{red}{rouge}, \textcolor{green}{vert}, \textcolor{blue!50}{bleu}, et \textcolor{orange!80}{orange}.
+
+\subsubsection{Fonctionnement global}
+
+Depuis l'état initial, quand l'Utilisateur ajoute une pièce on passe dans le mode $\texttt{M}_\texttt{choix}$. Quand la machine est dans ce mode, l'utilisateur peut : règler le niveau de sucre avec l'action $\texttt{B}_\texttt{sucre}$, appuyer sur $\texttt{B}_\texttt{ann}$ pour retourner dans $\texttt{M}_\texttt{dispo}$, ou bien sur $\texttt{B}_\texttt{café}$ ou $\texttt{B}_\texttt{thé}$ pour aller dans le mode $\texttt{M}_\texttt{prépa}$. 
+
+La machine passe du mode $\texttt{M}_\texttt{prépa}$ à $\texttt{M}_\texttt{fin}$ quand elle a terminé de servir la boisson, puis l'utilisateur peut alors prendre le gobelet pour faire retourner la machine dans son état initial.
+
+\begin{figure}[h]
+	\centering
+\begin{tikzpicture}[auto, node distance=0.8cm]
+  \node[state,initial above]  (q0) [fill=red]  {Mdispo};
+  \node[state]  (q1) [below=of q0, fill=green]  {Mchoix};
+  \node[state]  (q2) [below=of q1, fill=blue!50]  {Mprépa};
+  \node[state]  (q3) [below=of q2, fill=orange!80]  {Mfin};
+  
+  \path[->] 
+    (q0) edge[bend right] node[left] {ajoutPièce} (q1)
+    (q1) edge[bend right] node[right] {Bann} (q0)
+    (q1) edge[loop right] node {Bsucre} (q1)
+    (q1) edge[bend right] node[left] {Bthé} (q2)
+    (q1) edge[bend left] node[right] {Bcafé} (q2)
+    (q2) edge node[right] {} (q3)
+    (q3) edge[bend left= 100,min distance=3cm] node[left] {Gout} (q0)
+  ;
+\end{tikzpicture}
+\end{figure}
+
+\subsubsection{États intermédiaires}
+
+Pour pouvoir utiliser les propositions atomiques $\texttt{B}_\texttt{ann}$, $\texttt{B}_\texttt{café}$, $\texttt{B}_\texttt{thé}$, $\texttt{P}_{50}$ $\texttt{R}_{50}$, et $\texttt{G}_\texttt{out}$, on a en fait un état intermédiaire pour chaque action de l'utilisateur. 
+
+Une action ($\texttt{Bann}$, $\texttt{Bcafé}$, $\texttt{Bthé}$, \texttt{ajoutePièce}, \texttt{prendGobelet}), fait atterir le système dans un état ou la proposition correspondante ($\texttt{B}_\texttt{ann}$, $\texttt{B}_\texttt{café}$, $\texttt{B}_\texttt{thé}$, $\texttt{P}_{50}$, $\texttt{G}_\texttt{out}$) est vraie, puis cette proposition passe à faux dans l'état suivant.  
+De plus, depuis l'état où $\texttt{B}_\texttt{ann}$ est vraie, une action interne amène le système dans le mode $\texttt{M}_\texttt{dispo}$ avec la proposition $\texttt{R}_{50}$ vraie, puis directement dans l'état initial.
+
+\begin{figure}[h!]
+	\centering
+\begin{tikzpicture}[auto, node distance=1cm, text width = 1.5cm, align=center]
+  \node[state, initial]  (dispo1)[fill=red]   {Mdispo, $\lnot$p50, $\lnot$r50};
+  \node[state]  (dispo2) [below=of dispo1, fill=red]  {Mdispo, p50};
+  \node[state]  (dispo3) [left=of dispo2, fill=red]  {Mdispo, r50};
+  
+  
+  \node[state]  (choix1) [below =of dispo2, fill=green]  {Mchoix, $\lnot$Ban};
+  \node[state]  (choix2) [left =of choix1, fill=green]  {Mchoix, Ban};
+  \node[state]  (prepCafe) [below =of choix1, fill=blue!50]  {Mprépa, Bcafé};
+  \node[state]  (prepThe) [right =of prepCafe, fill=blue!50]  {Mprépa, Bthé};
+
+  \node[state]  (finCafe) [below =of prepCafe, fill=orange!80]  {Mfin, Pcafé};
+  \node[state]  (finThe) [below =of prepThe, fill=orange!80]  {Mfin, Pthé};
+  \node[state]  (finGout) [below=of finCafe, fill=orange!80]  {Mfin, Gout};
+  
+  \path[->] 
+    (dispo1) edge node[right, text width = 2cm] {ajoutPièce} (dispo2)
+    (dispo2) edge node[left] {} (choix1)
+    (choix1) edge[loop right] node {Bsucre} ()
+    (choix1) edge node[above] {Bann} (choix2)
+    (choix2) edge node {} (dispo3)
+    (dispo3) edge node {} (dispo1)
+    (choix1) edge node[left] {Bcafé} (prepCafe)
+    (choix1) edge node {Bthé} (prepThe)
+
+    (prepCafe) edge node {} (finCafe)
+    (prepThe) edge node {} (finThe)
+    (finCafe) edge node[left,text width = 2.2cm] {prendGobelet} (finGout)
+    (finThe) edge node[text width = 2.2cm, below] {prendGobelet} (finGout)
+    (finGout) edge[bend right=100] node {} (dispo1)
+  ;  
+\end{tikzpicture}
+\end{figure}
+
+\clearpage
+
+\section{Spécification}
+
+\end{document}
